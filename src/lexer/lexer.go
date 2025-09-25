@@ -4,14 +4,14 @@ import "monkey/token"
 
 type Lexer struct {
 	input string // only ascii characters are
-	position int // current position in input (points to currnt char)
+	position int // current position in input (points to curret char)
 	readPosition int // current reading position in input (after current char)
 	ch byte // current char under examination, must be an ascii character
 }
 
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
-	l.readChar()
+	l.readChar() // readChar immediately so we populate readPosition and position correctly.
 	return l
 } 
 
