@@ -31,6 +31,9 @@ func (l *Lexer) readChar() {
 
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
+
+	l.skipWhitespace()
+
 	switch l.ch {
 	case '=': 
 		tok = newToken(token.ASSIGN, l.ch)
@@ -51,9 +54,62 @@ func (l *Lexer) NextToken() token.Token {
 	case 0: 
 		tok.Literal = ""
 		tok.Type = token.EOF
+	default:
+		if isLetter(l.ch) {
+			tok.Literal = l.readIdentifier()
+			tok.Type = token.LookupIdent(tok.Literal)
+			// return early, we've already progressed our lexer during readIdentifier
+			return tok
+			} else if isDigit(l.ch) {
+				tok.Literal = l.readNumber()
+				tok.Type = token.INT
+				// return early, we've already progressed our lexer during readNumber
+				return tok
+		} else {
+			tok = newToken(token.ILLEGAL, l.ch)
+		}
 	}
 	l.readChar()
 	return tok
+}
+
+// progress the lexer until we read a char that isn't blank, tab, newline, carriage return
+func (l *Lexer) skipWhitespace() {
+	for l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r' {
+		l.readChar()
+	}
+}
+
+// determines the valid characters that can be used in keywords/identifiers. 
+// These EXPLICITLY should not be bytes that are mapped to already existing tokens.
+func isLetter(ch byte) bool {
+	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_' // add ch == '?' and ch == '!'?
+}
+
+func (l *Lexer) readIdentifier() string {
+	// we cache the starting position
+	position := l.position
+	// progress the lexer until we read a character that isn't a letter
+	for isLetter(l.ch) {
+		l.readChar()
+	}
+	// return the substring that is the starting position to the character that isn't a letter (exclusive)
+	return l.input[position:l.position]
+}
+
+func isDigit(ch byte) bool {
+	return '0' <= ch && ch <= '9'
+}
+
+func (l *Lexer) readNumber() string {
+	// we cache the starting position
+	position := l.position
+	// progress the lexer until we read a character that isn't a letter
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	// return the substring that is the starting position to the character that isn't a letter (exclusive)
+	return l.input[position:l.position]
 }
 
 func newToken(tokenType token.TokenType, ch byte) token.Token {
