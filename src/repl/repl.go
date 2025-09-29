@@ -10,6 +10,12 @@ import (
 
 const PROMP = ">> "
 
+// REPL stand for REad Eval Print Loop... 
+// A javascript console in a web browser is a REPL:
+// It allows input (Read), 
+// that input is evaluated into code (Eval), 
+// the output of the evaluated code is printed (Print),
+// and then the program switches back to Read mode (Loop)
 func Start (in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
 	for {
