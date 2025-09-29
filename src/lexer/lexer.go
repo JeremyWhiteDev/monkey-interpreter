@@ -16,6 +16,7 @@ func New(input string) *Lexer {
 } 
 
 // read the next ascii char in the Lexer's input string. 
+// this is not idempotent. Reading the next progresses the Lexer's positions through the input string.
 func (l *Lexer) readChar() {
 	// we only support ascii characters (for now). Supporting unicode characters would mean chars could no longer be represented as bytes
 	// but instead as runes, complicating this "next logic" and being unable to traverse the string simply, since a rune could be multiple bytes.
@@ -29,6 +30,16 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
+// Peak the next char in the Lexer's input string, without moving the lexer's positions. 
+// this is idempotent. peakChar() can be called repeatedly without changing the state of the Lexer.
+func (l *Lexer) peakChar() byte {
+	if l.position >= len(l.input) {
+		return 0
+	} else {
+		return l.input[l.readPosition]
+	}
+}
+
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 
@@ -36,13 +47,27 @@ func (l *Lexer) NextToken() token.Token {
 
 	switch l.ch {
 	case '=': 
-		tok = newToken(token.ASSIGN, l.ch)
+		if l.peakChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = token.Token{Type: token.EQ, Literal: literal}
+		} else {
+			tok = newToken(token.ASSIGN, l.ch)
+		}
 	case '+': 
 			tok = newToken(token.PLUS, l.ch)
 	case '-': 
 			tok = newToken(token.MINUS, l.ch)
 	case '!': 
+		if l.peakChar() == '=' {
+			ch := l.ch
+			l.readChar()
+			literal := string(ch) + string(l.ch)
+			tok = token.Token{Type: token.NOT_EQ, Literal: literal}
+		} else {
 			tok = newToken(token.BANG, l.ch)
+		}
 	case '/': 
 			tok = newToken(token.SLASH, l.ch)
 	case '*': 
