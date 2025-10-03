@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"monkey/ast"
 	"monkey/lexer"
 	"monkey/token"
@@ -9,12 +10,16 @@ import (
 type Parser struct {
 	l *lexer.Lexer
 
-	curToken token.Token
+	curToken  token.Token
 	peekToken token.Token
+	errors    []string
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l}
+	p := &Parser{
+		l:      l,
+		errors: []string{},
+	}
 
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
@@ -44,18 +49,18 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
-	case token.LET: 
+	case token.LET:
 		return p.parseLetStatement()
-	default: 
+	default:
 		return nil
 	}
 }
 
-// When we re parsing a let statment, we know the shape we want, ie let x = 5;
+// When we are parsing a let statment, we know the shape we want, ie let x = 5;
 func (p *Parser) parseLetStatement() ast.Statement {
 	stmt := &ast.LetStatement{Token: p.curToken}
 
-	// expect the next token to be an identifiver, such as 'x'. expectPeek
+	// expect the next token to be an identifiver, such as 'x'. expectPeek checks and increments parser
 	if !p.expectPeek(token.IDENT) {
 		return nil
 	}
@@ -83,12 +88,23 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
 
-//inspect AND progress the token if it matches
+// inspect AND progress the token if it matches
 func (p *Parser) expectPeek(t token.TokenType) bool {
 	if p.peekTokenIs(t) {
 		p.nextToken()
 		return true
 	} else {
+		p.peekError(t)
 		return false
 	}
+}
+
+func (p *Parser) Errors() []string {
+	return p.errors
+}
+
+func (p *Parser) peekError(t token.TokenType) []string {
+	msg := fmt.Sprintf("expected next token to be %s, got %s instead", t, p.peekToken.Type)
+	p.errors = append(p.errors, msg)
+	return p.errors
 }
