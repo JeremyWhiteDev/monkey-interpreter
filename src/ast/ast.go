@@ -66,13 +66,13 @@ type ReturnStatement struct {
 func (rs *ReturnStatement) statementNode()       {}
 func (rs *ReturnStatement) TokenLiteral() string { return rs.Token.Literal }
 
-type ExpressionStatemet struct {
+type ExpressionStatement struct {
 	Token      token.Token // the first token of the expression
 	Expression Expression
 }
 
-func (ex *ExpressionStatemet) statementNode()      {}
-func (es *ExpressionStatemet) TokeLiteral() string { return es.Token.Literal }
+func (es *ExpressionStatement) statementNode()       {}
+func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 
 func (ls *LetStatement) String() string {
 	var out bytes.Buffer
@@ -104,7 +104,7 @@ func (rs *ReturnStatement) String() string {
 	return out.String()
 }
 
-func (es *ExpressionStatemet) String() string {
+func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
 		return es.Expression.String()
 	}
