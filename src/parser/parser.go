@@ -164,15 +164,28 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExp := prefixParseFn()
 
+	// This loop is most of the magic here.
+	// if we are parsing an expression, like -a + b + c,
+	// we parse -a first (above) we then peek and see that +, or SUM is higher than LOWEST, which is the
+	// "default" precedence when beginning parsing an expression statement.
+	// so we go about parsing the "first" infix expression, -a + b.
+	// During that parsing, the tokens are progressed and this parseExpression fn is called again with the provided SUM precedence.
+	// We handle the "left" side of the expression above, and then peek at the token after b, which is another SUM precedence,
+	// so we don't call infixParseFn and we just return -a + b;
+	// When that completes, we are back into the "top level" parseExpression call, where precedence is still LOWEST.
+	// This causes us to parse the second part of the infix, because the "+" between b and c is higher than LOWEST.
+	// But our existing leftExp has been updated from (-a) to (-a + b) and the tokens have been progressed from the first
+	// iteration of this loop at this level.
+	// after parsing b + c, we end up with the nesting (((-a) + b) + c)
 	for !p.peekTokenIs(token.SEMICOLON) && precedence < p.peekPrecedence() {
-		infix := p.infixParseFns[p.peekToken.Type]
-		if infix == nil {
+		infixParseFn := p.infixParseFns[p.peekToken.Type]
+		if infixParseFn == nil {
 			return leftExp
 		}
 
 		p.nextToken()
 
-		leftExp = infix(leftExp)
+		leftExp = infixParseFn(leftExp)
 	}
 	return leftExp
 }
@@ -272,7 +285,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 
 	precedence := p.curPrecedence()
 	p.nextToken()
-	expression.Right = p.parseExpression(precedence)
+	expression.Right = p.parseExpression(precedence) // this can kick off a recursive call stack, since parseExpression calls parseInfixExpression!
 
 	return expression
 }
