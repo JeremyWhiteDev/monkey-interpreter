@@ -177,7 +177,6 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
-	// TODO consider precedence here.
 	prefixParseFn := p.prefixParseFns[p.curToken.Type]
 	if prefixParseFn == nil {
 		p.noPrefixParseFnError(p.curToken.Type)
