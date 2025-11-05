@@ -3,26 +3,26 @@ package lexer
 import "monkey/token"
 
 type Lexer struct {
-	input string // only ascii characters are
-	position int // current position in input (points to curret char)
-	readPosition int // current reading position in input (after current char)
-	ch byte // current char under examination, must be an ascii character
+	input        string // only ascii characters are
+	position     int    // current position in input (points to curret char)
+	readPosition int    // current reading position in input (after current char)
+	ch           byte   // current char under examination, must be an ascii character
 }
 
 func New(input string) *Lexer {
 	l := &Lexer{input: input}
 	l.readChar() // readChar immediately so we populate readPosition and position correctly.
 	return l
-} 
+}
 
-// read the next ascii char in the Lexer's input string. 
+// read the next ascii char in the Lexer's input string.
 // this is not idempotent. Reading the next progresses the Lexer's positions through the input string.
 func (l *Lexer) readChar() {
 	// we only support ascii characters (for now). Supporting unicode characters would mean chars could no longer be represented as bytes
 	// but instead as runes, complicating this "next logic" and being unable to traverse the string simply, since a rune could be multiple bytes.
 
 	if l.readPosition >= len(l.input) {
-		l.ch= 0 // 0 is ascii NUL character
+		l.ch = 0 // 0 is ascii NUL character
 	} else {
 		l.ch = l.input[l.readPosition]
 	}
@@ -30,7 +30,7 @@ func (l *Lexer) readChar() {
 	l.readPosition += 1
 }
 
-// Peak the next char in the Lexer's input string, without moving the lexer's positions. 
+// Peak the next char in the Lexer's input string, without moving the lexer's positions.
 // this is idempotent. peakChar() can be called repeatedly without changing the state of the Lexer.
 func (l *Lexer) peakChar() byte {
 	if l.position >= len(l.input) {
@@ -46,7 +46,7 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 
 	switch l.ch {
-	case '=': 
+	case '=':
 		if l.peakChar() == '=' {
 			ch := l.ch
 			l.readChar()
@@ -55,11 +55,11 @@ func (l *Lexer) NextToken() token.Token {
 		} else {
 			tok = newToken(token.ASSIGN, l.ch)
 		}
-	case '+': 
-			tok = newToken(token.PLUS, l.ch)
-	case '-': 
-			tok = newToken(token.MINUS, l.ch)
-	case '!': 
+	case '+':
+		tok = newToken(token.PLUS, l.ch)
+	case '-':
+		tok = newToken(token.MINUS, l.ch)
+	case '!':
 		if l.peakChar() == '=' {
 			ch := l.ch
 			l.readChar()
@@ -68,27 +68,27 @@ func (l *Lexer) NextToken() token.Token {
 		} else {
 			tok = newToken(token.BANG, l.ch)
 		}
-	case '/': 
-			tok = newToken(token.SLASH, l.ch)
-	case '*': 
-			tok = newToken(token.ASTERISK, l.ch)
-	case '<': 
-			tok = newToken(token.LT, l.ch)
-	case '>': 
-			tok = newToken(token.GT, l.ch)
-	case ';': 
+	case '/':
+		tok = newToken(token.SLASH, l.ch)
+	case '*':
+		tok = newToken(token.ASTERISK, l.ch)
+	case '<':
+		tok = newToken(token.LT, l.ch)
+	case '>':
+		tok = newToken(token.GT, l.ch)
+	case ';':
 		tok = newToken(token.SEMICOLON, l.ch)
-	case '(': 
+	case '(':
 		tok = newToken(token.LPAREN, l.ch)
-	case ')': 
+	case ')':
 		tok = newToken(token.RPAREN, l.ch)
-	case ',': 
+	case ',':
 		tok = newToken(token.COMMA, l.ch)
-	case '{': 
+	case '{':
 		tok = newToken(token.LBRACE, l.ch)
-	case '}': 
+	case '}':
 		tok = newToken(token.RBRACE, l.ch)
-	case 0: 
+	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
 	default:
@@ -97,11 +97,12 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Type = token.LookupIdent(tok.Literal)
 			// return early, we've already progressed our lexer during readIdentifier
 			return tok
-			} else if isDigit(l.ch) {
-				tok.Literal = l.readNumber()
-				tok.Type = token.INT
-				// return early, we've already progressed our lexer during readNumber
-				return tok
+		} else if isDigit(l.ch) {
+			// TODO add FloatLiteral expression Issue #1
+			tok.Literal = l.readNumber()
+			tok.Type = token.INT
+			// return early, we've already progressed our lexer during readNumber
+			return tok
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch)
 		}
@@ -117,7 +118,7 @@ func (l *Lexer) skipWhitespace() {
 	}
 }
 
-// determines the valid characters that can be used in keywords/identifiers. 
+// determines the valid characters that can be used in keywords/identifiers.
 // These EXPLICITLY should not be bytes that are mapped to already existing tokens.
 func isLetter(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_' // add ch == '?' and ch == '!'?
