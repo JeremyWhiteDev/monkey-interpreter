@@ -434,3 +434,29 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 	}
 	return args
 }
+
+// Anatomy of If expression after being parsed
+/*
+
+Condition: {
+	left: {
+		left: {
+			left: 5
+			operator: "*"
+			right: 5
+		}
+		operator: "+"
+		right: 10
+	}
+	operator: ">"
+	right: 34
+}
+Consequence: {
+	Value: 99
+}
+Alternative: {
+	Value: 100
+}
+
+
+*/
