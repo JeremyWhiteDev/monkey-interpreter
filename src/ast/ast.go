@@ -114,6 +114,8 @@ func (es *ExpressionStatement) String() string {
 
 func (i *Identifier) String() string { return i.Value }
 
+// TODO add FloatLiteral expression Issue #1
+
 type IntegerLiteral struct {
 	Token token.Token
 	Value int64
